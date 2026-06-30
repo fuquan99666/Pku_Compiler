@@ -1,6 +1,6 @@
 %option noyywrap
 %option nounput
-%option noinput
+
 
 %{
 
@@ -31,6 +31,17 @@ Hexadecimal   0[xX][0-9a-fA-F]+
 
 {WhiteSpace}    { /* 忽略, 不做任何操作 */ }
 {LineComment}   { /* 忽略, 不做任何操作 */ }
+
+"/*"  {
+    int c;
+    while ((c = yyinput()) != 0) {
+        if (c == '*') {
+            if ((c = yyinput()) == '/') {
+                break;
+            }
+        }
+    }
+}
 
 "int"           { return INT; }
 "return"        { return RETURN; }

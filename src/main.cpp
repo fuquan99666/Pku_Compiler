@@ -33,7 +33,10 @@ int main(int argc, const char *argv[]) {
   assert(!ret);
 
   // 输出解析得到的 AST, 其实就是个字符串
-  ast->Dump();
-  cout << endl;
+  // ast->Dump();
+  // cout << ast->GenKoopa();
+  // 将 Koopa IR 输出到指定的输出文件中
+  freopen(output, "w", stdout);
+  cout << ast->GenKoopa();
   return 0;
 }

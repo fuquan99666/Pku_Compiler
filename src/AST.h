@@ -9,6 +9,10 @@ class BaseAST {
         virtual ~BaseAST() = default;
 
         virtual void Dump() const = 0;
+        
+        virtual std::string GenKoopa() const {
+            return "";
+        }
 };
 
 
@@ -23,6 +27,8 @@ class CompUnitAST : public BaseAST {
         func_def->Dump();
         std::cout << " }" ;
     }
+
+    std::string GenKoopa() const override;
 };
 
 
@@ -40,6 +46,9 @@ class FuncDefAST : public BaseAST {
         block->Dump();
         std::cout << " }" ;
      }
+
+     std::string GenKoopa() const override;
+
 };
 
 // FuncType 也是 BaseAST
@@ -50,6 +59,9 @@ class FuncTypeAST : public BaseAST {
      void Dump() const override {
         std::cout << "FuncTypeAST { " << type << " }" ;
      }
+
+     std::string GenKoopa() const override;
+
 };
 
 
@@ -63,6 +75,8 @@ class BlockAST : public BaseAST {
         stmt->Dump();
         std::cout << " }" ;
      }
+
+     std::string GenKoopa() const override;
 };
 
 
@@ -74,6 +88,8 @@ class StmtAST : public BaseAST {
      void Dump() const override {
         std::cout << "StmtAST { return " << number << "; }" ;
      }
+
+     std::string GenKoopa() const override;
 };
 
 
