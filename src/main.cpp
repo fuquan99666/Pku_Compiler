@@ -4,6 +4,8 @@
 #include <memory>
 #include <string>
 #include "AST.h"  
+#include "koopa.h"  // 用于生成koopa IR的内存格式
+#include "Visit.h"  // 用于访问koopa IR的内存格式, 生成riscv汇编
 
 using namespace std;
 
@@ -18,6 +20,8 @@ extern int yyparse(unique_ptr<BaseAST> &ast);
 int main(int argc, const char *argv[]) {
   // 解析命令行参数. 测试脚本/评测平台要求你的编译器能接收如下参数:
   // compiler 模式 输入文件 -o 输出文件
+  // 命令为：build/compiler -koopa hello.c -o hello.koopa 
+  // or build/compiler -riscv hello.c -o hello.s
   assert(argc == 5);
   auto mode = argv[1];
   auto input = argv[2];
@@ -32,11 +36,29 @@ int main(int argc, const char *argv[]) {
   auto ret = yyparse(ast);
   assert(!ret);
 
+
   // 输出解析得到的 AST, 其实就是个字符串
   // ast->Dump();
   // cout << ast->GenKoopa();
-  // 将 Koopa IR 输出到指定的输出文件中
-  freopen(output, "w", stdout);
-  cout << ast->GenKoopa();
+
+  std::string koopa_ir = ast->GenKoopa(); // string koopa IR
+
+  if (std::string(mode) == "-koopa") {
+    // 将 Koopa IR 输出到指定的输出文件中
+    freopen(output, "w", stdout);
+    cout << koopa_ir;
+    return 0;
+  }
+
+
+  if (std::string(mode) == "-riscv") {
+
+    std::string riscv_as;
+    freopen(output, "w", stdout);
+    GenRISCV(koopa_ir, riscv_as); // convert to riscv assembly and output to stdout
+    cout << riscv_as;
+    return 0;
+  }
+
   return 0;
 }
