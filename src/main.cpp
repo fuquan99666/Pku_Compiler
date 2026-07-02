@@ -55,7 +55,8 @@ int main(int argc, const char *argv[]) {
 
     std::string riscv_as;
     freopen(output, "w", stdout);
-    GenRISCV(koopa_ir, riscv_as); // convert to riscv assembly and output to stdout
+    GenRISCVVisitor visitor;
+    riscv_as = visitor.GenRISCV(koopa_ir); // convert to riscv assembly and output to stdout
     cout << riscv_as;
     return 0;
   }
