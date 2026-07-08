@@ -1,0 +1,1 @@
+CompUnitAST { FuncDefAST { FuncTypeAST { int }, main, BlockAST { StmtAST { return ExpressionAST { op: +, ExpressionAST { PrimaryExpAST { ( ExpressionAST { op: -, ExpressionAST { op: -, ExpressionAST { op: !, ExpressionAST { PrimaryExpAST { number: 6 } } } } } ) } } } } } } }

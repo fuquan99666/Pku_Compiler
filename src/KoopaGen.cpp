@@ -27,6 +27,24 @@ std::string BlockAST::GenKoopa() const {
 
 std::string StmtAST::GenKoopa() const {
     std::string s;
-    s += "  ret " + std::to_string(number) + "\n";
+    s += "  ret " + expression->GenKoopa() + "\n";
     return s;
+}
+
+std::string ExpressionAST::GenKoopa() const {
+    std::string s;
+    if (op == '\0') {
+        s += primary_exp->GenKoopa();
+    } else {
+        s += " " + std::string(1, op) + expression->GenKoopa();
+    }
+    return s;
+}
+
+std::string PrimaryExpAST::GenKoopa() const {
+    if (is_number) {
+        return std::to_string(number);
+    } else {
+        return "(" + expression->GenKoopa() + ")";
+    }
 }

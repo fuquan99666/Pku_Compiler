@@ -32,6 +32,7 @@ using namespace std;
 %union {
   std::string *str_val;
   int int_val;
+  char op_val;
   BaseAST *ast_val;
 }
 
@@ -40,9 +41,10 @@ using namespace std;
 %token RETURN INT
 %token <str_val> IDENT
 %token <int_val> INT_CONST
+%token <op_val> OP
 
 // 非终结符的类型定义
-%type <ast_val> FuncDef FuncType Block Stmt 
+%type <ast_val> FuncDef FuncType Block Stmt PrimaryExp Expression 
 %type <int_val> Number
 
 %%
@@ -98,9 +100,39 @@ Block
   ;
 
 Stmt
-  : RETURN Number ';' {
+  : RETURN Expression ';' {
     auto ast = new StmtAST();
-    ast->number = $2;
+    ast->expression = unique_ptr<BaseAST>($2);
+    $$ = ast;
+  }
+  ;
+
+Expression
+  : PrimaryExp {
+    auto ast = new ExpressionAST();
+    ast->primary_exp = unique_ptr<BaseAST>($1);
+    ast->op = '\0'; // over
+    $$ = ast;
+  } 
+  | OP Expression {
+    auto ast = new ExpressionAST();
+    ast->op = $1;
+    ast->expression = unique_ptr<BaseAST>($2);
+    $$ = ast;
+  }
+  ;
+
+PrimaryExp 
+  : '(' Expression ')' {
+    auto ast = new PrimaryExpAST();
+    ast->expression = unique_ptr<BaseAST>($2);
+    ast->is_number = false;
+    $$ = ast;
+  }
+  | Number {
+    auto ast = new PrimaryExpAST();
+    ast->is_number = true;
+    ast->number = $1;
     $$ = ast;
   }
   ;

@@ -83,13 +83,59 @@ class BlockAST : public BaseAST {
 // Stmt 也是 BaseAST
 class StmtAST : public BaseAST {
     public:
-     int number;
+     std::unique_ptr<BaseAST> expression;
 
      void Dump() const override {
-        std::cout << "StmtAST { return " << number << "; }" ;
+        std::cout << "StmtAST { return ";
+        expression->Dump();
+        std::cout << " }" ;
      }
 
      std::string GenKoopa() const override;
 };
+
+class PrimaryExpAST : public BaseAST {
+    public:
+        bool is_number = false;
+        int number;
+        std::unique_ptr<BaseAST> expression;
+
+        void Dump() const override {
+            if (is_number) {
+                std::cout << "PrimaryExpAST { number: " << number << " }";
+            } else {
+                std::cout << "PrimaryExpAST { ( ";
+                expression->Dump();
+                std::cout << " ) }";
+            }
+        }
+
+        std::string GenKoopa() const override;
+};
+
+class ExpressionAST : public BaseAST {
+    public:
+        char op = '\0'; // over
+        std::unique_ptr<BaseAST> primary_exp;
+        std::unique_ptr<BaseAST> expression;
+
+        void Dump() const override {
+            if (op == '\0') {
+                std::cout << "ExpressionAST { ";
+                primary_exp->Dump();
+                    std::cout << " }";
+                }
+            else {
+                std::cout << "ExpressionAST { ";
+                std::cout << "op: " << op << ", ";
+                expression->Dump();
+                std::cout << " }";
+            }
+        }
+
+        std::string GenKoopa() const override;
+};
+
+
 
 

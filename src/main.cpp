@@ -36,10 +36,11 @@ int main(int argc, const char *argv[]) {
   auto ret = yyparse(ast);
   assert(!ret);
 
-
-  // 输出解析得到的 AST, 其实就是个字符串
-  // ast->Dump();
-  // cout << ast->GenKoopa();
+  if (std::string(mode) == "-ast") {
+    freopen(output, "w", stdout);
+    ast->Dump();
+    return 0;
+  }
 
   std::string koopa_ir = ast->GenKoopa(); // string koopa IR
 

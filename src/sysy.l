@@ -18,6 +18,7 @@ using namespace std;
 /* 空白符和注释 */
 WhiteSpace    [ \t\n\r]*
 LineComment   "//".*
+Op          [-+!]
 
 /* 标识符 */
 Identifier    [a-zA-Z_][a-zA-Z0-9_]*
@@ -47,6 +48,7 @@ Hexadecimal   0[xX][0-9a-fA-F]+
 "return"        { return RETURN; }
 
 {Identifier}    { yylval.str_val = new string(yytext); return IDENT; }
+{Op}            { yylval.op_val = yytext[0]; return OP; }
 
 {Decimal}       { yylval.int_val = strtol(yytext, nullptr, 0); return INT_CONST; }
 {Octal}         { yylval.int_val = strtol(yytext, nullptr, 0); return INT_CONST; }
