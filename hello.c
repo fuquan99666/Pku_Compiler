@@ -3,5 +3,5 @@ int main() {
   /*
   ignore me! 
   */
-  return 1 + 2 * 3 ;
+  return +(- -!6) + 2 * 3 + 4 / 2 - (+!44);
 }

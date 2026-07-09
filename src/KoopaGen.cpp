@@ -60,24 +60,25 @@ std::string UnaryExpressionAST::GenKoopa() const {
 
     } else {
 
+        std::string pre_index;
+
         auto expr_ast = dynamic_cast<UnaryExpressionAST*>(expression.get());
         expr_ast->temp_counter = temp_counter;
 
         std::string exp = expr_ast->GenKoopa();
+
+        if (temp_counter == expr_ast->temp_counter) {
+            pre_index = expr_ast->koopa_result;
+        } else {
+            pre_index = "%" + std::to_string(expr_ast->temp_counter - 1);
+        }
+
         temp_counter = expr_ast->temp_counter;
         koopa_result = expr_ast->koopa_result;
 
         s += exp;
 
         std::string index = std::to_string(temp_counter);
-        std::string pre_index;
-
-        if (temp_counter == 0) {
-            pre_index = koopa_result;
-        } else {
-            pre_index = "%" + std::to_string(temp_counter - 1);
-        }
-
 
         if (op == '+') {
             // do nothing
