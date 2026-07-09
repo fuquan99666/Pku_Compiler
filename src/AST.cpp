@@ -46,16 +46,47 @@ void PrimaryExpAST::Dump() const{
 }
 
 
-void ExpressionAST::Dump() const{
+void UnaryExpressionAST::Dump() const{
     if (op == '\0') {
-        std::cout << "ExpressionAST { ";
+        std::cout << "UnaryExpressionAST { ";
         primary_exp->Dump();
             std::cout << " }";
         }
     else {
-        std::cout << "ExpressionAST { ";
+        std::cout << "UnaryExpressionAST { ";
         std::cout << "op: " << op << ", ";
         expression->Dump();
+        std::cout << " }";
+    }
+}
+
+
+void AddExpressionAST::Dump() const{
+    if (op == '\0') {
+        std::cout << "AddExpressionAST { ";
+        MulExpression->Dump();
+        std::cout << " }";
+    } else {
+        std::cout << "AddExpressionAST { ";
+        std::cout << "op: " << op << ", ";
+        AddExpression->Dump();
+        std::cout << ", ";
+        MulExpression->Dump();
+        std::cout << " }";
+    }
+}
+
+void MulExpressionAST::Dump() const{
+    if (op == '\0') {
+        std::cout << "MulExpressionAST { ";
+        UnaryExpression->Dump();
+        std::cout << " }";
+    } else {
+        std::cout << "MulExpressionAST { ";
+        std::cout << "op: " << op << ", ";
+        MulExpression->Dump();
+        std::cout << ", ";
+        UnaryExpression->Dump();
         std::cout << " }";
     }
 }

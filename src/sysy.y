@@ -41,10 +41,10 @@ using namespace std;
 %token RETURN INT
 %token <str_val> IDENT
 %token <int_val> INT_CONST
-%token <op_val> OP
+%token <op_val> MUL_OP ADD_OP
 
 // 非终结符的类型定义
-%type <ast_val> FuncDef FuncType Block Stmt PrimaryExp Expression 
+%type <ast_val> FuncDef FuncType Block Stmt PrimaryExp UnaryExp MulExp AddExp
 %type <int_val> Number
 
 %%
@@ -100,22 +100,22 @@ Block
   ;
 
 Stmt
-  : RETURN Expression ';' {
+  : RETURN AddExp ';' {
     auto ast = new StmtAST();
     ast->expression = unique_ptr<BaseAST>($2);
     $$ = ast;
   }
   ;
 
-Expression
+UnaryExp
   : PrimaryExp {
-    auto ast = new ExpressionAST();
+    auto ast = new UnaryExpressionAST();
     ast->primary_exp = unique_ptr<BaseAST>($1);
     ast->op = '\0'; // over
     $$ = ast;
   } 
-  | OP Expression {
-    auto ast = new ExpressionAST();
+  | ADD_OP UnaryExp {
+    auto ast = new UnaryExpressionAST();
     ast->op = $1;
     ast->expression = unique_ptr<BaseAST>($2);
     $$ = ast;
@@ -123,7 +123,7 @@ Expression
   ;
 
 PrimaryExp 
-  : '(' Expression ')' {
+  : '(' UnaryExp ')' {
     auto ast = new PrimaryExpAST();
     ast->expression = unique_ptr<BaseAST>($2);
     ast->is_number = false;
@@ -133,6 +133,36 @@ PrimaryExp
     auto ast = new PrimaryExpAST();
     ast->is_number = true;
     ast->number = $1;
+    $$ = ast;
+  }
+  ;
+
+MulExp
+  : UnaryExp {
+    auto ast = new MulExpressionAST();
+    ast->UnaryExpression = unique_ptr<BaseAST>($1);
+    $$ = ast;
+  }
+  | MulExp MUL_OP UnaryExp {
+    auto ast = new MulExpressionAST();
+    ast->MulExpression = unique_ptr<BaseAST>($1);
+    ast->op = $2;
+    ast->UnaryExpression = unique_ptr<BaseAST>($3);
+    $$ = ast;
+  }
+  ;
+
+AddExp
+  : MulExp {
+    auto ast = new AddExpressionAST();
+    ast->MulExpression = unique_ptr<BaseAST>($1);
+    $$ = ast;
+  }
+  | AddExp ADD_OP MulExp {
+    auto ast = new AddExpressionAST();
+    ast->AddExpression = unique_ptr<BaseAST>($1);
+    ast->op = $2;
+    ast->MulExpression = unique_ptr<BaseAST>($3);
     $$ = ast;
   }
   ;

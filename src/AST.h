@@ -5,13 +5,16 @@
 
 
 // ========== 前向声明 ==========
-class ExpressionAST;  
+class BaseAST;
+class UnaryExpressionAST;  
 class PrimaryExpAST;
 class StmtAST;
 class BlockAST;
 class FuncDefAST;
 class FuncTypeAST;
 class CompUnitAST;
+class AddExpressionAST;
+class MulExpressionAST;
 
 // 所有 AST 的 基类
 class BaseAST {
@@ -96,12 +99,45 @@ class PrimaryExpAST : public BaseAST {
         std::string GenKoopa() const override;
 };
 
-class ExpressionAST : public BaseAST {
+class UnaryExpressionAST : public BaseAST {
     public:
         char op = '\0'; // over
         std::unique_ptr<BaseAST> primary_exp;
-        std::unique_ptr<BaseAST> expression;
+        std::unique_ptr<BaseAST> expression;  // actually is a UnaryExpressionAST
 
+        mutable std::string koopa_result;
+        mutable int temp_counter = 0;
+
+        void Dump() const override;
+
+        std::string GenKoopa() const override;
+};
+
+
+class AddExpressionAST: public BaseAST {
+    public:
+        char op = '\0'; // '+' or '-' , if not set, only one child 
+        std::unique_ptr<BaseAST> AddExpression;
+        std::unique_ptr<BaseAST> MulExpression;
+
+        mutable std::string left_result;
+        mutable std::string right_result;
+        mutable std::string koopa_result;
+        mutable int temp_counter = 0;
+
+        void Dump() const override;
+
+        std::string GenKoopa() const override;
+};
+
+class MulExpressionAST: public BaseAST {
+    public:
+        char op = '\0'; // '*' or '/' or '%', if not set, only one Unary child 
+        std::unique_ptr<BaseAST> UnaryExpression;
+        std::unique_ptr<BaseAST> MulExpression;
+
+        mutable std::string left_result;
+        mutable std::string right_result;
         mutable std::string koopa_result;
         mutable int temp_counter = 0;
 
