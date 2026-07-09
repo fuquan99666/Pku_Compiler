@@ -3,6 +3,16 @@
 #include <string>
 #include <iostream>
 
+
+// ========== 前向声明 ==========
+class ExpressionAST;  
+class PrimaryExpAST;
+class StmtAST;
+class BlockAST;
+class FuncDefAST;
+class FuncTypeAST;
+class CompUnitAST;
+
 // 所有 AST 的 基类
 class BaseAST {
     public:
@@ -10,9 +20,7 @@ class BaseAST {
 
         virtual void Dump() const = 0;
         
-        virtual std::string GenKoopa() const {
-            return "";
-        }
+        virtual std::string GenKoopa() const = 0;
 };
 
 
@@ -22,11 +30,7 @@ class CompUnitAST : public BaseAST {
     // 用智能指针管理对象
     std::unique_ptr<BaseAST> func_def;
 
-    void Dump() const override {
-        std::cout << "CompUnitAST { ";
-        func_def->Dump();
-        std::cout << " }" ;
-    }
+    void Dump() const override;
 
     std::string GenKoopa() const override;
 };
@@ -39,13 +43,7 @@ class FuncDefAST : public BaseAST {
      std::string ident;
      std::unique_ptr<BaseAST> block;
 
-     void Dump() const override {
-        std::cout << "FuncDefAST { ";
-        func_type->Dump();
-        std::cout << ", " << ident << ", ";
-        block->Dump();
-        std::cout << " }" ;
-     }
+     void Dump() const override;
 
      std::string GenKoopa() const override;
 
@@ -56,9 +54,7 @@ class FuncTypeAST : public BaseAST {
     public:
      std::string type;
 
-     void Dump() const override {
-        std::cout << "FuncTypeAST { " << type << " }" ;
-     }
+     void Dump() const override;
 
      std::string GenKoopa() const override;
 
@@ -70,11 +66,7 @@ class BlockAST : public BaseAST {
     public:
      std::unique_ptr<BaseAST> stmt;
 
-     void Dump() const override {
-        std::cout << "BlockAST { ";
-        stmt->Dump();
-        std::cout << " }" ;
-     }
+     void Dump() const override;
 
      std::string GenKoopa() const override;
 };
@@ -85,11 +77,7 @@ class StmtAST : public BaseAST {
     public:
      std::unique_ptr<BaseAST> expression;
 
-     void Dump() const override {
-        std::cout << "StmtAST { return ";
-        expression->Dump();
-        std::cout << " }" ;
-     }
+     void Dump() const override;
 
      std::string GenKoopa() const override;
 };
@@ -100,15 +88,10 @@ class PrimaryExpAST : public BaseAST {
         int number;
         std::unique_ptr<BaseAST> expression;
 
-        void Dump() const override {
-            if (is_number) {
-                std::cout << "PrimaryExpAST { number: " << number << " }";
-            } else {
-                std::cout << "PrimaryExpAST { ( ";
-                expression->Dump();
-                std::cout << " ) }";
-            }
-        }
+        mutable std::string koopa_result;
+        mutable int temp_counter = 0;
+
+        void Dump() const override;
 
         std::string GenKoopa() const override;
 };
@@ -119,19 +102,10 @@ class ExpressionAST : public BaseAST {
         std::unique_ptr<BaseAST> primary_exp;
         std::unique_ptr<BaseAST> expression;
 
-        void Dump() const override {
-            if (op == '\0') {
-                std::cout << "ExpressionAST { ";
-                primary_exp->Dump();
-                    std::cout << " }";
-                }
-            else {
-                std::cout << "ExpressionAST { ";
-                std::cout << "op: " << op << ", ";
-                expression->Dump();
-                std::cout << " }";
-            }
-        }
+        mutable std::string koopa_result;
+        mutable int temp_counter = 0;
+
+        void Dump() const override;
 
         std::string GenKoopa() const override;
 };
