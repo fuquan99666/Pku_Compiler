@@ -1,5 +1,6 @@
 #include "Visit.h"
 #include <cassert>
+#include <iostream>
 
 void GenRISCVVisitor::GenRISCV_0(std::string s, std::string &output) {
 
@@ -150,6 +151,10 @@ void GenRISCVVisitor::Visit(const koopa_raw_value_t &value) {
             // kind.data.integer is koopa_raw_integer_t
             Visit(kind.data.integer);
             break;
+        case KOOPA_RVT_BINARY:
+            // kind.data.binary is koopa_raw_binary_t
+            Visit(kind.data.binary);
+            break;
         default:
             // 现阶段，只处理return 0此类指令，所以只处理KOOPA_RVT_RETURN和KOOPA_RVT_INTEGER
             assert(false);
@@ -158,11 +163,60 @@ void GenRISCVVisitor::Visit(const koopa_raw_value_t &value) {
 
 void GenRISCVVisitor::Visit(const koopa_raw_integer_t &int_val) {
     output += std::to_string(int_val.value);
-    output += "\n";
 }
 
 void GenRISCVVisitor::Visit(const koopa_raw_return_t &ret) {
-    output += "  li a0, ";
-    Visit(ret.value);
+
+
+    if (temp_counter == 0) {
+        output += "  li a0, ";
+        Visit(ret.value);
+        output += "\n";
+    } else {
+        output += "  mv a0, t" + std::to_string(temp_counter - 1) + "\n";
+    }
+    
     output += "  ret\n";
+}
+
+void GenRISCVVisitor::Visit(const koopa_raw_binary_t &binary) {
+    koopa_raw_binary_op_t op = binary.op;
+    koopa_raw_value_t lhs = binary.lhs;
+    koopa_raw_value_t rhs = binary.rhs;
+
+    std::string lhs_str, rhs_str;
+
+    std::string temp_reg = "t" + std::to_string(temp_counter);
+    std::string pre_temp_reg = "t" + std::to_string(temp_counter - 1);
+    temp_counter++;
+
+
+
+    switch (op) {
+        case KOOPA_RBO_ADD:
+            break; 
+        case KOOPA_RBO_SUB:
+            // for Unary operation like -x, we can treat it as 0 - x 
+            if (rhs->kind.tag == KOOPA_RVT_INTEGER) {
+                rhs_str = std::to_string(rhs->kind.data.integer.value);
+                output += "  li " + temp_reg + ", " + rhs_str + "\n";
+                output += "  sub " + temp_reg + ", " + "x0" + ", " + temp_reg + "\n";
+            } else {
+                output += "  sub " + temp_reg + ", " + "x0" + ", " + pre_temp_reg + "\n";
+            }
+            break;
+        case KOOPA_RBO_EQ:
+            // for Unary operation like !x, we can treat it as x == 0
+            if (lhs->kind.tag ==  KOOPA_RVT_INTEGER) {
+                std::string lhs_str = std::to_string(lhs->kind.data.integer.value);
+                output += "  li " + temp_reg + ", " + lhs_str + "\n";
+                output += "  xor " + temp_reg + ", " + temp_reg + ", x0\n";
+                output += "  seqz " + temp_reg + ", " + temp_reg + "\n";
+            } else {
+                output += "  seqz " + temp_reg + ", " + pre_temp_reg + "\n";
+            }
+            break;
+        default:
+            assert(false); // 先处理 eq 和 sub 两种情况，其他情况暂时不处理
+    }
 }

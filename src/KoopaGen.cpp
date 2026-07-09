@@ -116,6 +116,7 @@ std::string PrimaryExpAST::GenKoopa() const {
         std::string exp = expr_ast->GenKoopa();
         s += exp;
         temp_counter = expr_ast->temp_counter;
+        koopa_result = expr_ast->koopa_result;
         return s;
     }
 }

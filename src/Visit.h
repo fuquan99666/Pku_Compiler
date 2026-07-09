@@ -7,6 +7,10 @@ class GenRISCVVisitor {
     private:
         std::string output;
     public:
+
+        // In RISCV, we can use t0-t6 for temporary registers, and a0-a7 for argument registers
+        int temp_counter = 0; // counter for temporary registers
+
         void GenRISCV_0(std::string s, std::string &output);
         std::string GenRISCV(std::string s);
         void Visit(const koopa_raw_program_t &program);
@@ -16,5 +20,7 @@ class GenRISCVVisitor {
         void Visit(const koopa_raw_value_t &value);
         void Visit(const koopa_raw_integer_t &int_val);
         void Visit(const koopa_raw_return_t &ret);
+        void Visit(const koopa_raw_binary_t &binary);
+
 };
 

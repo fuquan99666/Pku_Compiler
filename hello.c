@@ -3,5 +3,5 @@ int main() {
   /*
   ignore me! ignore me!
   */
-  return (++--(!!!8)); 
+  return 8;
 }
