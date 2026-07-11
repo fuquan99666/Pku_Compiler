@@ -33,6 +33,7 @@ using namespace std;
   std::string *str_val;
   int int_val;
   char op_val;
+  std::string *op_str_val;
   BaseAST *ast_val;
 }
 
@@ -42,9 +43,10 @@ using namespace std;
 %token <str_val> IDENT
 %token <int_val> INT_CONST
 %token <op_val> UNARY_OP MUL_OP ADD_OP
+%token <op_str_val> REL_OP OR_OP AND_OP EQ_OP
 
 // 非终结符的类型定义
-%type <ast_val> FuncDef FuncType Block Stmt PrimaryExp UnaryExp MulExp AddExp
+%type <ast_val> FuncDef FuncType Block Stmt PrimaryExp UnaryExp MulExp AddExp RelExp EqExp LAndExp LOrExp
 %type <int_val> Number
 
 %%
@@ -100,7 +102,7 @@ Block
   ;
 
 Stmt
-  : RETURN AddExp ';' {
+  : RETURN LOrExp ';' {
     auto ast = new StmtAST();
     ast->expression = unique_ptr<BaseAST>($2);
     $$ = ast;
@@ -166,6 +168,62 @@ AddExp
     $$ = ast;
   }
   ;
+
+RelExp
+  : AddExp {
+    auto ast = new RelationalExpressionAST();
+    ast->AddExp = unique_ptr<BaseAST>($1);
+    $$ = ast;
+  } 
+  | RelExp REL_OP AddExp {
+    auto ast = new RelationalExpressionAST();
+    ast->RelExp = unique_ptr<BaseAST>($1);
+    ast->op = *unique_ptr<std::string>($2);
+    ast->AddExp = unique_ptr<BaseAST>($3);
+    $$ = ast;
+  };
+
+EqExp
+  : RelExp {
+    auto ast = new EqualityExpressionAST();
+    ast->RelExp = unique_ptr<BaseAST>($1);
+    $$ = ast;
+  }
+  | EqExp EQ_OP RelExp {
+    auto ast = new EqualityExpressionAST();
+    ast->EqExp = unique_ptr<BaseAST>($1);
+    ast->op = *unique_ptr<std::string>($2);
+    ast->RelExp = unique_ptr<BaseAST>($3);
+    $$ = ast;
+  };
+
+LAndExp
+  : EqExp {
+    auto ast = new LogicalAndExpressionAST();
+    ast->EqExp = unique_ptr<BaseAST>($1);
+    $$ = ast;
+  }
+  | LAndExp AND_OP EqExp {
+    auto ast = new LogicalAndExpressionAST();
+    ast->AndExp = unique_ptr<BaseAST>($1);
+    ast->op = *unique_ptr<std::string>($2);
+    ast->EqExp = unique_ptr<BaseAST>($3);
+    $$ = ast;
+  };
+
+LOrExp
+  : LAndExp {
+    auto ast = new LogicalOrExpressionAST();
+    ast->AndExp = unique_ptr<BaseAST>($1);
+    $$ = ast;
+  }
+  | LOrExp OR_OP LAndExp {
+    auto ast = new LogicalOrExpressionAST();
+    ast->OrExp = unique_ptr<BaseAST>($1);
+    ast->op = *unique_ptr<std::string>($2);
+    ast->AndExp = unique_ptr<BaseAST>($3);
+    $$ = ast;
+  };  
 
 Number
   : INT_CONST {

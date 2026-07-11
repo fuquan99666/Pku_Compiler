@@ -167,5 +167,47 @@ class MulExpressionAST: public BaseAST {
 };
 
 
+class RelationalExpressionAST: public BaseAST {
+    public:
+        std::string op = "\0"; // '<', '>', '<=', '>='
+        std::unique_ptr<BaseAST> RelExp;
+        std::unique_ptr<BaseAST> AddExp;
 
+        void Dump() const override;
+
+        std::string GenKoopa(KoopaContext& ctx) const override;
+};
+
+class EqualityExpressionAST: public BaseAST {
+    public:
+        std::string op = "\0"; // '==', '!='
+        std::unique_ptr<BaseAST> EqExp;
+        std::unique_ptr<BaseAST> RelExp;
+
+        void Dump() const override;
+
+        std::string GenKoopa(KoopaContext& ctx) const override;
+};
+
+class LogicalAndExpressionAST: public BaseAST {
+    public:
+        std::string op = "\0"; // '&&'
+
+        std::unique_ptr<BaseAST> AndExp;
+        std::unique_ptr<BaseAST> EqExp;
+
+        void Dump() const override;
+        std::string GenKoopa(KoopaContext& ctx) const override;
+};
+
+class LogicalOrExpressionAST: public BaseAST {
+    public:
+        std::string op = "\0"; // '||'
+
+        std::unique_ptr<BaseAST> OrExp;
+        std::unique_ptr<BaseAST> AndExp;
+
+        void Dump() const override;
+        std::string GenKoopa(KoopaContext& ctx) const override;
+};
 

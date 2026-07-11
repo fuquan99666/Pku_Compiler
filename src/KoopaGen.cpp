@@ -171,3 +171,22 @@ std::string MulExpressionAST::GenKoopa(KoopaContext& ctx) const {
         return s;
     }
 }
+
+std::string RelationalExpressionAST::GenKoopa(KoopaContext& ctx) const {
+    return "";
+}
+
+std::string EqualityExpressionAST::GenKoopa(KoopaContext& ctx) const {
+    return "";
+}
+
+std::string LogicalAndExpressionAST::GenKoopa(KoopaContext& ctx) const {
+    return "";
+}
+
+std::string LogicalOrExpressionAST::GenKoopa(KoopaContext& ctx) const {
+    return "";
+}
+
+
+

@@ -18,8 +18,21 @@ using namespace std;
 /* 空白符和注释 */
 WhiteSpace    [ \t\n\r]*
 LineComment   "//".*
+
+/* 一、二元运算符 */
 Add_Op          [-+!]
 Mul_Op           [*/%]
+
+/* 逻辑运算符 */
+Or_Op         "||"
+And_Op        "&&"
+
+/* 比较运算符 */
+Rel_Op        <=|>=|<|>
+
+/* 相等运算符 */
+Eq_Op         ==|!=
+
 
 /* 标识符 */
 Identifier    [a-zA-Z_][a-zA-Z0-9_]*
@@ -52,6 +65,12 @@ Hexadecimal   0[xX][0-9a-fA-F]+
 
 {Mul_Op}         { yylval.op_val = yytext[0]; return MUL_OP; }
 {Add_Op}         { yylval.op_val = yytext[0]; return ADD_OP; }
+
+{Rel_Op}         { yylval.op_str_val = new string(yytext); return REL_OP; }
+{And_Op}        { yylval.op_str_val = new string(yytext); return AND_OP; }
+{Or_Op}         { yylval.op_str_val = new string(yytext); return OR_OP; }
+{Eq_Op}         { yylval.op_str_val = new string(yytext); return EQ_OP; }
+
 
 {Decimal}       { yylval.int_val = strtol(yytext, nullptr, 0); return INT_CONST; }
 {Octal}         { yylval.int_val = strtol(yytext, nullptr, 0); return INT_CONST; }
