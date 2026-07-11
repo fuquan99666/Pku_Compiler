@@ -2,18 +2,21 @@
 // to avoid writing a lot of loop code 
 #include "koopa.h"
 #include <string>
+#include <map>
 
 class GenRISCVVisitor {
     private:
         std::string output;
     public:
 
+        // Instead of using int temp_counter and left_result to track the temporary registers
+        // Now we use a map<koopa_raw_binary_t, int> to track each inst's temporary register 
+        // here we only track the binary inst, not the integer .
+        // because integer is a constant, we can just load it to a temporary register again when we need it .
+        std::map<const koopa_raw_binary_t*, int> temp_map;
 
         // In RISCV, we can use t0-t6 for temporary registers, and a0-a7 for argument registers
         int temp_counter = 0; // counter for temporary registers
-
-        int left_result = 0; // store the result of left expression
-        int mul_left_result = 0; // store the result of left expression in mul expression
 
         // 分配一个新的临时寄存器
         std::string allocTemp() {
@@ -22,7 +25,6 @@ class GenRISCVVisitor {
 
         // 获取当前使用的最后一个寄存器
         std::string getLastTemp() {
-            if (temp_counter == 0) return "a0";
             return "t" + std::to_string(temp_counter - 1);
         }
 

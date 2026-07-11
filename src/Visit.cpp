@@ -190,80 +190,88 @@ void GenRISCVVisitor::Visit(const koopa_raw_binary_t &binary) {
     koopa_raw_value_t lhs = binary.lhs;
     koopa_raw_value_t rhs = binary.rhs;
 
-
-    if (lhs->kind.tag == KOOPA_RVT_INTEGER && rhs->kind.tag == KOOPA_RVT_INTEGER) {
-        left_result = temp_counter; // 更新左操作数的结果寄存器索引
-    }
-
-    if ((op == KOOPA_RBO_ADD || op == KOOPA_RBO_SUB) && rhs->kind.tag == KOOPA_RVT_INTEGER) {
-        left_result = temp_counter; // 更新左操作数的结果寄存器索引
-    }
-
     // 先处理左右操作数
     std::string lhs_reg, rhs_reg;
 
-    if (lhs->kind.tag == KOOPA_RVT_INTEGER && lhs->kind.data.integer.value != 0) {
-        lhs_reg = allocTemp();
-        output += "  li " + lhs_reg + ", ";
-        Visit(lhs->kind.data.integer);
-        output += "\n";
-    } else if (lhs->kind.tag == KOOPA_RVT_INTEGER && lhs->kind.data.integer.value == 0) {
-        lhs_reg = "x0"; // 使用 x0 寄存器表示 0
-    } else {
-        if (op == KOOPA_RBO_ADD || op == KOOPA_RBO_SUB) {
-            lhs_reg = "t" + std::to_string(left_result - 1);
+    // now use temp_map to track each inst's temporary register
+    if (lhs->kind.tag == KOOPA_RVT_INTEGER) {
+        if (lhs->kind.data.integer.value != 0) {
+            lhs_reg = allocTemp();
+            output += "  li " + lhs_reg + ", ";
+            Visit(lhs->kind.data.integer);
+            output += "\n";
         } else {
-            lhs_reg = "t" + std::to_string(temp_counter - 1);
+            lhs_reg = "x0"; // zero register
         }
+    } else if (lhs->kind.tag == KOOPA_RVT_BINARY) {
+        if (temp_map.find(&lhs->kind.data.binary) != temp_map.end()) {
+            lhs_reg = "t" + std::to_string(temp_map[&lhs->kind.data.binary]);
+        } else {
+            assert(false); // should not happen
+        }
+    } else {
+        // 现阶段只处理整数和二元操作数
+        assert(false);
     }
 
-    if (rhs->kind.tag == KOOPA_RVT_INTEGER && rhs->kind.data.integer.value != 0) {
-        rhs_reg = allocTemp();
-        output += "  li " + rhs_reg + ", ";
-        Visit(rhs->kind.data.integer);
-        output += "\n";
-    } else if (rhs->kind.tag == KOOPA_RVT_INTEGER && rhs->kind.data.integer.value == 0) {
-        rhs_reg = "x0"; // 使用 x0 寄存器表示 0
-    } else {
-        if ((op == KOOPA_RBO_ADD || op == KOOPA_RBO_SUB) && lhs->kind.tag == KOOPA_RVT_INTEGER && lhs->kind.data.integer.value != 0) {
-            rhs_reg = "t" + std::to_string(temp_counter - 2);
+    if (rhs->kind.tag == KOOPA_RVT_INTEGER) {
+        if (rhs->kind.data.integer.value != 0) {
+            rhs_reg = allocTemp();
+            output += "  li " + rhs_reg + ", ";
+            Visit(rhs->kind.data.integer);
+            output += "\n";
         } else {
-            rhs_reg = "t" + std::to_string(temp_counter - 1);
+            rhs_reg = "x0"; // zero register
         }
+    } else if (rhs->kind.tag == KOOPA_RVT_BINARY) {
+        if (temp_map.find(&rhs->kind.data.binary) != temp_map.end()) {
+            rhs_reg = "t" + std::to_string(temp_map[&rhs->kind.data.binary]);
+        } else {
+            assert(false); // should not happen
+        }
+    } else {
+        // 现阶段只处理整数和二元操作数
+        assert(false);
     }
 
     std::string result_reg;
     if (temp_counter == 0) {
         result_reg = allocTemp(); // 分配一个新的临时寄存器
     } else {
-        result_reg = "t" + std::to_string(temp_counter-1);
+        result_reg = getLastTemp(); // 使用当前最后一个临时寄存器
     }
     
     switch (op) {
         case KOOPA_RBO_ADD:
             output += "  add " + result_reg + ", " + lhs_reg + ", " + rhs_reg + "\n";
+            temp_map[&binary] = temp_counter - 1; // track the temporary register for this binary instruction
             break;
             
         case KOOPA_RBO_SUB:
 
             output += "  sub " + result_reg + ", " + lhs_reg + ", " + rhs_reg + "\n";
+            temp_map[&binary] = temp_counter - 1; // track the temporary register for this binary instruction
             break;
             
         case KOOPA_RBO_MUL:
             output += "  mul " + result_reg + ", " + lhs_reg + ", " + rhs_reg + "\n";
+            temp_map[&binary] = temp_counter - 1; // track the temporary register for this binary instruction
             break;
             
         case KOOPA_RBO_DIV:
             output += "  div " + result_reg + ", " + lhs_reg + ", " + rhs_reg + "\n";
+            temp_map[&binary] = temp_counter - 1; // track the temporary register for this binary instruction
             break;
         case KOOPA_RBO_MOD:
-            // TODO
+            output += "  rem " + result_reg + ", " + lhs_reg + ", " + rhs_reg + "\n";
+            temp_map[&binary] = temp_counter - 1; // track the temporary register
             break;
             
         case KOOPA_RBO_EQ: {
             // 比较是否相等
             output += "  xor " + result_reg + ", " + lhs_reg + ", " + rhs_reg + "\n";
             output += "  seqz " + result_reg + ", " + result_reg + "\n";
+            temp_map[&binary] = temp_counter - 1; // track the temporary register for this binary instruction
             break;
         }
             
