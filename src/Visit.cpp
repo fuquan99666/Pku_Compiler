@@ -274,6 +274,52 @@ void GenRISCVVisitor::Visit(const koopa_raw_binary_t &binary) {
             temp_map[&binary] = temp_counter - 1; // track the temporary register for this binary instruction
             break;
         }
+
+        case KOOPA_RBO_NOT_EQ: {
+            // 比较是否不相等
+            output += "  xor " + result_reg + ", " + lhs_reg + ", " + rhs_reg + "\n";
+            output += "  snez " + result_reg + ", " + result_reg + "\n";
+            temp_map[&binary] = temp_counter - 1; // track the temporary register for this binary instruction
+            break;
+        }
+
+        case KOOPA_RBO_LT: {
+            output += "  slt " + result_reg + ", " + lhs_reg + ", " + rhs_reg + "\n";
+            temp_map[&binary] = temp_counter - 1; // track the temporary register for this binary instruction
+            break;
+        }
+
+        case KOOPA_RBO_GT: {
+            output += "  slt " + result_reg + ", " + rhs_reg + ", " + lhs_reg + "\n";
+            temp_map[&binary] = temp_counter - 1; // track the temporary register for this binary instruction
+            break;
+        }
+
+        case KOOPA_RBO_LE: {
+            output += "  sgt " + result_reg + ", " + lhs_reg + ", " + rhs_reg + "\n";
+            output += "  seqz " + result_reg + ", " + result_reg + "\n";
+            temp_map[&binary] = temp_counter - 1; // track the temporary register for this binary instruction
+            break;
+        }
+
+        case KOOPA_RBO_GE: {
+            output += "  slt " + result_reg + ", " + lhs_reg + ", " + rhs_reg + "\n";
+            output += "  seqz " + result_reg + ", " + result_reg + "\n";
+            temp_map[&binary] = temp_counter - 1; // track the temporary register for this binary instruction
+            break;
+        }
+
+        case KOOPA_RBO_AND: {
+            output += "  and " + result_reg + ", " + lhs_reg + ", " + rhs_reg + "\n";
+            temp_map[&binary] = temp_counter - 1; // track the temporary register for this binary instruction
+            break;
+        }
+
+        case KOOPA_RBO_OR: {
+            output += "  or " + result_reg + ", " + lhs_reg + ", " + rhs_reg + "\n";
+            temp_map[&binary] = temp_counter - 1; // track the temporary register for this binary instruction
+            break;
+        }
             
         default:
             assert(false);

@@ -34,6 +34,11 @@ void StmtAST::Dump() const{
     std::cout << " }" ;
 }
 
+void ExpAST::Dump() const{
+    std::cout << "ExpAST { ";
+    expression->Dump();
+    std::cout << " }" ;
+}
 
 void PrimaryExpAST::Dump() const{
     if (is_number) {

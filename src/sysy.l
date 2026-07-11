@@ -20,7 +20,8 @@ WhiteSpace    [ \t\n\r]*
 LineComment   "//".*
 
 /* 一、二元运算符 */
-Add_Op          [-+!]
+Add_Op          [-+]
+Not_Op          [!]   
 Mul_Op           [*/%]
 
 /* 逻辑运算符 */
@@ -65,6 +66,7 @@ Hexadecimal   0[xX][0-9a-fA-F]+
 
 {Mul_Op}         { yylval.op_val = yytext[0]; return MUL_OP; }
 {Add_Op}         { yylval.op_val = yytext[0]; return ADD_OP; }
+{Not_Op}         { yylval.op_val = yytext[0]; return NOT_OP; }
 
 {Rel_Op}         { yylval.op_str_val = new string(yytext); return REL_OP; }
 {And_Op}        { yylval.op_str_val = new string(yytext); return AND_OP; }

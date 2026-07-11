@@ -27,12 +27,11 @@ std::string BlockAST::GenKoopa(KoopaContext& ctx) const {
 }
 
 
-
 std::string StmtAST::GenKoopa(KoopaContext& ctx) const {
     std::string s;
 
     // dycast<BaseAST*>(expression.get()) to UnaryExpressionAST*
-    auto expr_ast = dynamic_cast<AddExpressionAST*>(expression.get());
+    auto expr_ast = dynamic_cast<ExpAST*>(expression.get());
     
     std::string exp = expr_ast->GenKoopa(ctx);
     s += exp;
@@ -41,6 +40,17 @@ std::string StmtAST::GenKoopa(KoopaContext& ctx) const {
     s += "  ret " + ctx.getLastValue() + "\n";  
 
     s += "\n";
+
+    return s;
+}
+
+std::string ExpAST::GenKoopa(KoopaContext& ctx) const {
+    std::string s;
+
+    auto expr_ast = dynamic_cast<LogicalOrExpressionAST*>(expression.get());
+    
+    std::string exp = expr_ast->GenKoopa(ctx);
+    s += exp;
 
     return s;
 }
@@ -86,7 +96,7 @@ std::string PrimaryExpAST::GenKoopa(KoopaContext& ctx) const {
         return "";
     } else {
 
-        auto expr_ast = dynamic_cast<UnaryExpressionAST*>(expression.get());
+        auto expr_ast = dynamic_cast<ExpAST*>(expression.get());
 
         std::string s;
         std::string exp = expr_ast->GenKoopa(ctx);
@@ -173,19 +183,133 @@ std::string MulExpressionAST::GenKoopa(KoopaContext& ctx) const {
 }
 
 std::string RelationalExpressionAST::GenKoopa(KoopaContext& ctx) const {
-    return "";
+    std::string s;
+
+    if (op == "\0") {
+        auto add_exp_ast = dynamic_cast<AddExpressionAST*>(AddExp.get());
+        s += add_exp_ast->GenKoopa(ctx);
+
+        return s;
+    } 
+
+    auto rel_exp_ast = dynamic_cast<RelationalExpressionAST*>(RelExp.get());
+    auto add_exp_ast = dynamic_cast<AddExpressionAST*>(AddExp.get());
+
+    s += rel_exp_ast->GenKoopa(ctx);
+
+    left_result = ctx.result;
+
+    s += add_exp_ast->GenKoopa(ctx);
+
+    right_result = ctx.result;
+
+    std::string index = ctx.newTemp();
+
+    if (op == "<") {
+        s += "  " + index + " = lt " + left_result + ", " + right_result + "\n";
+    } else if (op == ">") {
+        s += "  " + index + " = gt " + left_result + ", " + right_result + "\n";
+    } else if (op == "<=") {
+        s += "  " + index + " = le " + left_result + ", " + right_result + "\n";
+    } else if (op == ">=") {
+        s += "  " + index + " = ge " + left_result + ", " + right_result + "\n";
+    }
+
+    ctx.result = index;
+    return s;
+
 }
 
 std::string EqualityExpressionAST::GenKoopa(KoopaContext& ctx) const {
-    return "";
+    std::string s;
+
+    if (op == "\0") {
+        auto rel_exp_ast = dynamic_cast<RelationalExpressionAST*>(RelExp.get());
+        s += rel_exp_ast->GenKoopa(ctx);
+
+        return s;
+    }
+
+    auto eq_exp_ast = dynamic_cast<EqualityExpressionAST*>(EqExp.get());
+    auto rel_exp_ast = dynamic_cast<RelationalExpressionAST*>(RelExp.get());
+
+    s += eq_exp_ast->GenKoopa(ctx);
+    left_result = ctx.result;
+
+    s += rel_exp_ast->GenKoopa(ctx);
+    right_result = ctx.result;
+
+    std::string index = ctx.newTemp();
+
+    if (op == "==") {
+        s += "  " + index + " = eq " + left_result + ", " + right_result + "\n";
+    } else if (op == "!=") {
+        s += "  " + index + " = ne " + left_result + ", " + right_result + "\n";
+    }
+
+    ctx.result = index;
+    return s;
 }
 
 std::string LogicalAndExpressionAST::GenKoopa(KoopaContext& ctx) const {
-    return "";
+    std::string s;
+
+    if (op == "\0") {
+        auto eq_exp_ast = dynamic_cast<EqualityExpressionAST*>(EqExp.get());
+        s += eq_exp_ast->GenKoopa(ctx);
+
+        return s;
+    }
+
+    auto and_exp_ast = dynamic_cast<LogicalAndExpressionAST*>(AndExp.get());
+    auto eq_exp_ast = dynamic_cast<EqualityExpressionAST*>(EqExp.get());
+
+    s += and_exp_ast->GenKoopa(ctx);
+    left_result = ctx.result;
+
+    s += eq_exp_ast->GenKoopa(ctx);
+    right_result = ctx.result;
+
+    std::string index = ctx.newTemp();
+    std::string index_1 = ctx.newTemp();
+    std::string index_2 = ctx.newTemp();
+
+    s += "  " + index + " = ne " + left_result + ", 0\n"; // 将左操作数转换为布尔值
+    s += "  " + index_1 + " = ne " + right_result + ", 0\n"; // 将右操作数转换为布尔值
+
+    s += "  " + index_2 + " = and " + index + ", " + index_1 + "\n";
+
+    ctx.result = index_2;
+
+    return s;
 }
 
 std::string LogicalOrExpressionAST::GenKoopa(KoopaContext& ctx) const {
-    return "";
+    std::string s;
+    if (op == "\0") {
+        auto and_exp_ast = dynamic_cast<LogicalAndExpressionAST*>(AndExp.get());
+        s += and_exp_ast->GenKoopa(ctx);
+        return s;
+    }
+
+    auto or_exp_ast = dynamic_cast<LogicalOrExpressionAST*>(OrExp.get());
+    auto and_exp_ast = dynamic_cast<LogicalAndExpressionAST*>(AndExp.get());
+
+    s += or_exp_ast->GenKoopa(ctx);
+    left_result = ctx.result;
+
+    s += and_exp_ast->GenKoopa(ctx);
+    right_result = ctx.result;
+
+    std::string index = ctx.newTemp();
+
+    s += "  " + index + " = or " + left_result + ", " + right_result + "\n";
+
+    std::string index_1 = ctx.newTemp();
+    s += "  " + index_1 + " = ne " + index + ", 0\n"; // 将结果转换为布尔值
+    ctx.result = index_1;
+
+    return s;
 }
 
 

@@ -115,6 +115,15 @@ class StmtAST : public BaseAST {
      std::string GenKoopa(KoopaContext& ctx) const override;
 };
 
+class ExpAST : public BaseAST {
+    public:
+        std::unique_ptr<BaseAST> expression;
+
+        void Dump() const override;
+
+        std::string GenKoopa(KoopaContext& ctx) const override;
+};
+
 class PrimaryExpAST : public BaseAST {
     public:
         bool is_number = false;
@@ -173,6 +182,9 @@ class RelationalExpressionAST: public BaseAST {
         std::unique_ptr<BaseAST> RelExp;
         std::unique_ptr<BaseAST> AddExp;
 
+        mutable std::string left_result;
+        mutable std::string right_result;
+
         void Dump() const override;
 
         std::string GenKoopa(KoopaContext& ctx) const override;
@@ -183,6 +195,9 @@ class EqualityExpressionAST: public BaseAST {
         std::string op = "\0"; // '==', '!='
         std::unique_ptr<BaseAST> EqExp;
         std::unique_ptr<BaseAST> RelExp;
+
+        mutable std::string left_result;
+        mutable std::string right_result;
 
         void Dump() const override;
 
@@ -196,6 +211,9 @@ class LogicalAndExpressionAST: public BaseAST {
         std::unique_ptr<BaseAST> AndExp;
         std::unique_ptr<BaseAST> EqExp;
 
+        mutable std::string left_result;
+        mutable std::string right_result;
+
         void Dump() const override;
         std::string GenKoopa(KoopaContext& ctx) const override;
 };
@@ -206,6 +224,9 @@ class LogicalOrExpressionAST: public BaseAST {
 
         std::unique_ptr<BaseAST> OrExp;
         std::unique_ptr<BaseAST> AndExp;
+
+        mutable std::string left_result;
+        mutable std::string right_result;
 
         void Dump() const override;
         std::string GenKoopa(KoopaContext& ctx) const override;

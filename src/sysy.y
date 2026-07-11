@@ -42,11 +42,11 @@ using namespace std;
 %token RETURN INT
 %token <str_val> IDENT
 %token <int_val> INT_CONST
-%token <op_val> UNARY_OP MUL_OP ADD_OP
-%token <op_str_val> REL_OP OR_OP AND_OP EQ_OP
+%token <op_val> UNARY_OP MUL_OP ADD_OP NOT_OP
+%token <op_str_val> REL_OP OR_OP AND_OP EQ_OP 
 
 // 非终结符的类型定义
-%type <ast_val> FuncDef FuncType Block Stmt PrimaryExp UnaryExp MulExp AddExp RelExp EqExp LAndExp LOrExp
+%type <ast_val> FuncDef FuncType Block Stmt Exp PrimaryExp UnaryExp MulExp AddExp RelExp EqExp LAndExp LOrExp
 %type <int_val> Number
 
 %%
@@ -102,9 +102,17 @@ Block
   ;
 
 Stmt
-  : RETURN LOrExp ';' {
+  : RETURN Exp ';' {
     auto ast = new StmtAST();
     ast->expression = unique_ptr<BaseAST>($2);
+    $$ = ast;
+  }
+  ;
+
+Exp
+  : LOrExp {
+    auto ast = new ExpAST();
+    ast->expression = unique_ptr<BaseAST>($1);
     $$ = ast;
   }
   ;
@@ -122,10 +130,16 @@ UnaryExp
     ast->expression = unique_ptr<BaseAST>($2);
     $$ = ast;
   }
+  | NOT_OP UnaryExp {
+    auto ast = new UnaryExpressionAST();
+    ast->op = $1;
+    ast->expression = unique_ptr<BaseAST>($2);
+    $$ = ast;
+  }
   ;
 
 PrimaryExp 
-  : '(' UnaryExp ')' {
+  : '(' Exp ')' {
     auto ast = new PrimaryExpAST();
     ast->expression = unique_ptr<BaseAST>($2);
     ast->is_number = false;
