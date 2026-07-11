@@ -6,6 +6,7 @@
 #include "AST.h"  
 #include "koopa.h"  // 用于生成koopa IR的内存格式
 #include "Visit.h"  // 用于访问koopa IR的内存格式, 生成riscv汇编
+#include <fstream>
 
 using namespace std;
 
@@ -55,10 +56,19 @@ int main(int argc, const char *argv[]) {
   if (std::string(mode) == "-riscv") {
 
     std::string riscv_as;
-    freopen(output, "w", stdout);
+  
     GenRISCVVisitor visitor;
     riscv_as = visitor.GenRISCV(koopa_ir); // convert to riscv assembly and output to stdout
-    cout << riscv_as;
+    std::ofstream file(output);
+
+    if (file.is_open()) {
+        file << riscv_as;
+        file.close();
+    } else {
+        std::cout << "Error: Unable to open output file: " << output << std::endl;
+        return 1;
+    }
+
     return 0;
   }
 

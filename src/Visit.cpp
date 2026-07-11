@@ -100,8 +100,10 @@ void GenRISCVVisitor::Visit(const koopa_raw_program_t &program) {
     // ...
     output = "  .text\n";
     output += "  .globl main\n";
+
     
     Visit(program.values);
+
 
     output += "main:\n";
     Visit(program.funcs);
@@ -167,56 +169,106 @@ void GenRISCVVisitor::Visit(const koopa_raw_integer_t &int_val) {
 
 void GenRISCVVisitor::Visit(const koopa_raw_return_t &ret) {
 
-
+    // 处理返回值
     if (temp_counter == 0) {
+        // 没有临时寄存器，直接加载立即数
         output += "  li a0, ";
         Visit(ret.value);
-        output += "\n";
+        output += "\n"; 
+
     } else {
-        output += "  mv a0, t" + std::to_string(temp_counter - 1) + "\n";
+        // 有临时寄存器，从最后一个移到 a0
+        output += "  mv a0, " + getLastTemp() + "\n";
     }
-    
     output += "  ret\n";
+    resetTemp();  // 重置计数器
 }
 
 void GenRISCVVisitor::Visit(const koopa_raw_binary_t &binary) {
+
     koopa_raw_binary_op_t op = binary.op;
     koopa_raw_value_t lhs = binary.lhs;
     koopa_raw_value_t rhs = binary.rhs;
 
-    std::string lhs_str, rhs_str;
 
-    std::string temp_reg = "t" + std::to_string(temp_counter);
-    std::string pre_temp_reg = "t" + std::to_string(temp_counter - 1);
-    temp_counter++;
+    if (lhs->kind.tag == KOOPA_RVT_INTEGER && rhs->kind.tag == KOOPA_RVT_INTEGER) {
+        left_result = temp_counter; // 更新左操作数的结果寄存器索引
+    }
 
+    if ((op == KOOPA_RBO_ADD || op == KOOPA_RBO_SUB) && rhs->kind.tag == KOOPA_RVT_INTEGER) {
+        left_result = temp_counter; // 更新左操作数的结果寄存器索引
+    }
 
+    // 先处理左右操作数
+    std::string lhs_reg, rhs_reg;
 
+    if (lhs->kind.tag == KOOPA_RVT_INTEGER && lhs->kind.data.integer.value != 0) {
+        lhs_reg = allocTemp();
+        output += "  li " + lhs_reg + ", ";
+        Visit(lhs->kind.data.integer);
+        output += "\n";
+    } else if (lhs->kind.tag == KOOPA_RVT_INTEGER && lhs->kind.data.integer.value == 0) {
+        lhs_reg = "x0"; // 使用 x0 寄存器表示 0
+    } else {
+        if (op == KOOPA_RBO_ADD || op == KOOPA_RBO_SUB) {
+            lhs_reg = "t" + std::to_string(left_result - 1);
+        } else {
+            lhs_reg = "t" + std::to_string(temp_counter - 1);
+        }
+    }
+
+    if (rhs->kind.tag == KOOPA_RVT_INTEGER && rhs->kind.data.integer.value != 0) {
+        rhs_reg = allocTemp();
+        output += "  li " + rhs_reg + ", ";
+        Visit(rhs->kind.data.integer);
+        output += "\n";
+    } else if (rhs->kind.tag == KOOPA_RVT_INTEGER && rhs->kind.data.integer.value == 0) {
+        rhs_reg = "x0"; // 使用 x0 寄存器表示 0
+    } else {
+        if ((op == KOOPA_RBO_ADD || op == KOOPA_RBO_SUB) && lhs->kind.tag == KOOPA_RVT_INTEGER && lhs->kind.data.integer.value != 0) {
+            rhs_reg = "t" + std::to_string(temp_counter - 2);
+        } else {
+            rhs_reg = "t" + std::to_string(temp_counter - 1);
+        }
+    }
+
+    std::string result_reg;
+    if (temp_counter == 0) {
+        result_reg = allocTemp(); // 分配一个新的临时寄存器
+    } else {
+        result_reg = "t" + std::to_string(temp_counter-1);
+    }
+    
     switch (op) {
         case KOOPA_RBO_ADD:
-            break; 
+            output += "  add " + result_reg + ", " + lhs_reg + ", " + rhs_reg + "\n";
+            break;
+            
         case KOOPA_RBO_SUB:
-            // for Unary operation like -x, we can treat it as 0 - x 
-            if (rhs->kind.tag == KOOPA_RVT_INTEGER) {
-                rhs_str = std::to_string(rhs->kind.data.integer.value);
-                output += "  li " + temp_reg + ", " + rhs_str + "\n";
-                output += "  sub " + temp_reg + ", " + "x0" + ", " + temp_reg + "\n";
-            } else {
-                output += "  sub " + temp_reg + ", " + "x0" + ", " + pre_temp_reg + "\n";
-            }
+
+            output += "  sub " + result_reg + ", " + lhs_reg + ", " + rhs_reg + "\n";
             break;
-        case KOOPA_RBO_EQ:
-            // for Unary operation like !x, we can treat it as x == 0
-            if (lhs->kind.tag ==  KOOPA_RVT_INTEGER) {
-                std::string lhs_str = std::to_string(lhs->kind.data.integer.value);
-                output += "  li " + temp_reg + ", " + lhs_str + "\n";
-                output += "  xor " + temp_reg + ", " + temp_reg + ", x0\n";
-                output += "  seqz " + temp_reg + ", " + temp_reg + "\n";
-            } else {
-                output += "  seqz " + temp_reg + ", " + pre_temp_reg + "\n";
-            }
+            
+        case KOOPA_RBO_MUL:
+            output += "  mul " + result_reg + ", " + lhs_reg + ", " + rhs_reg + "\n";
             break;
+            
+        case KOOPA_RBO_DIV:
+            output += "  div " + result_reg + ", " + lhs_reg + ", " + rhs_reg + "\n";
+            break;
+        case KOOPA_RBO_MOD:
+            // TODO
+            break;
+            
+        case KOOPA_RBO_EQ: {
+            // 比较是否相等
+            output += "  xor " + result_reg + ", " + lhs_reg + ", " + rhs_reg + "\n";
+            output += "  seqz " + result_reg + ", " + result_reg + "\n";
+            break;
+        }
+            
         default:
-            assert(false); // 先处理 eq 和 sub 两种情况，其他情况暂时不处理
+            assert(false);
     }
+    
 }
