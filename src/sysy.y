@@ -41,7 +41,7 @@ using namespace std;
 %token RETURN INT
 %token <str_val> IDENT
 %token <int_val> INT_CONST
-%token <op_val> MUL_OP ADD_OP
+%token <op_val> UNARY_OP MUL_OP ADD_OP
 
 // 非终结符的类型定义
 %type <ast_val> FuncDef FuncType Block Stmt PrimaryExp UnaryExp MulExp AddExp

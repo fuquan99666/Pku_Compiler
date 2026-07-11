@@ -16,6 +16,36 @@ class CompUnitAST;
 class AddExpressionAST;
 class MulExpressionAST;
 
+
+struct KoopaContext {
+    int temp_counter = 0;
+    std::string result;  // 当前表达式的计算结果
+    
+    // 获取最后一个临时变量（或直接结果）
+    std::string getLastValue() const {
+        if (temp_counter == 0) {
+            return result;  // 可能是立即数（如 "42"）或 label（如 "%1"）
+        }
+        return "%" + std::to_string(temp_counter - 1);
+    }
+    
+    // 创建新的临时变量
+    std::string newTemp() {
+        return "%" + std::to_string(temp_counter++);
+    }
+    
+    // 获取指定索引的临时变量
+    std::string getTemp(int index) const {
+        return "%" + std::to_string(index);
+    }
+    
+    // 重置上下文（用于新表达式）
+    void reset() {
+        temp_counter = 0;
+        result.clear();
+    }
+};
+
 // 所有 AST 的 基类
 class BaseAST {
     public:
@@ -23,7 +53,7 @@ class BaseAST {
 
         virtual void Dump() const = 0;
         
-        virtual std::string GenKoopa() const = 0;
+        virtual std::string GenKoopa(KoopaContext& ctx) const = 0;
 };
 
 
@@ -35,7 +65,7 @@ class CompUnitAST : public BaseAST {
 
     void Dump() const override;
 
-    std::string GenKoopa() const override;
+    std::string GenKoopa(KoopaContext& ctx) const override;
 };
 
 
@@ -48,7 +78,7 @@ class FuncDefAST : public BaseAST {
 
      void Dump() const override;
 
-     std::string GenKoopa() const override;
+     std::string GenKoopa(KoopaContext& ctx) const override;
 
 };
 
@@ -59,7 +89,7 @@ class FuncTypeAST : public BaseAST {
 
      void Dump() const override;
 
-     std::string GenKoopa() const override;
+     std::string GenKoopa(KoopaContext& ctx) const override;
 
 };
 
@@ -71,7 +101,7 @@ class BlockAST : public BaseAST {
 
      void Dump() const override;
 
-     std::string GenKoopa() const override;
+     std::string GenKoopa(KoopaContext& ctx) const override;
 };
 
 
@@ -82,7 +112,7 @@ class StmtAST : public BaseAST {
 
      void Dump() const override;
 
-     std::string GenKoopa() const override;
+     std::string GenKoopa(KoopaContext& ctx) const override;
 };
 
 class PrimaryExpAST : public BaseAST {
@@ -91,12 +121,9 @@ class PrimaryExpAST : public BaseAST {
         int number;
         std::unique_ptr<BaseAST> expression;
 
-        mutable std::string koopa_result;
-        mutable int temp_counter = 0;
-
         void Dump() const override;
 
-        std::string GenKoopa() const override;
+        std::string GenKoopa(KoopaContext& ctx) const override;
 };
 
 class UnaryExpressionAST : public BaseAST {
@@ -105,12 +132,9 @@ class UnaryExpressionAST : public BaseAST {
         std::unique_ptr<BaseAST> primary_exp;
         std::unique_ptr<BaseAST> expression;  // actually is a UnaryExpressionAST
 
-        mutable std::string koopa_result;
-        mutable int temp_counter = 0;
-
         void Dump() const override;
 
-        std::string GenKoopa() const override;
+        std::string GenKoopa(KoopaContext& ctx) const override;
 };
 
 
@@ -122,12 +146,10 @@ class AddExpressionAST: public BaseAST {
 
         mutable std::string left_result;
         mutable std::string right_result;
-        mutable std::string koopa_result;
-        mutable int temp_counter = 0;
 
         void Dump() const override;
 
-        std::string GenKoopa() const override;
+        std::string GenKoopa(KoopaContext& ctx) const override;
 };
 
 class MulExpressionAST: public BaseAST {
@@ -138,12 +160,10 @@ class MulExpressionAST: public BaseAST {
 
         mutable std::string left_result;
         mutable std::string right_result;
-        mutable std::string koopa_result;
-        mutable int temp_counter = 0;
 
         void Dump() const override;
 
-        std::string GenKoopa() const override;
+        std::string GenKoopa(KoopaContext& ctx) const override;
 };
 
 

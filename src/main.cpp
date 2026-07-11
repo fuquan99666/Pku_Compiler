@@ -43,7 +43,9 @@ int main(int argc, const char *argv[]) {
     return 0;
   }
 
-  std::string koopa_ir = ast->GenKoopa(); // string koopa IR
+  KoopaContext ctx;
+
+  std::string koopa_ir = ast->GenKoopa(ctx); // string koopa IR
 
   if (std::string(mode) == "-koopa") {
     // 将 Koopa IR 输出到指定的输出文件中
